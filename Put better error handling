@@ -1,39 +1,263 @@
-import logging
-import sys
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Scanner;
 
-class QueueSystem:
-    def __init__(self):
-        self.queue = []
+class Ticket {
+    private int ticketNumber;
 
-    def enqueue(self, patient):
-        try:
-            if not isinstance(patient, str):
-                raise TypeError("Patient name must be a string")
-            self.queue.append(patient)
-            print(f"{patient} has been added to the queue.")
-        except TypeError as e:
-            self.log_error(e)
+    public Ticket() {
+        ticketNumber = (int) (Math.random() * 100) + 1;
+    }
 
-    def dequeue(self):
-        try:
-            if len(self.queue) == 0:
-                raise IndexError("Queue is empty")
-            patient = self.queue.pop(0)
-            print(f"{patient} has been dequeued.")
-            return patient
-        except IndexError as e:
-            self.log_error(e)
+    public int getTicketNumber() {
+        return ticketNumber;
+    }
+}
 
-    def log_error(self, error):
-        logging.basicConfig(filename='error.log', level=logging.ERROR)
-        logging.error(error)
-        print("An error occurred. Please contact support for assistance.")
+class Patient {
+    private String name;
+    private String address;
+    private String phoneNumber;
+    private String serviceType;
+    private Ticket ticket;
+    private String status;
 
-if __name__ == "__main__":
-    queue_system = QueueSystem()
+    public Patient(String name, String address, String phoneNumber, String serviceType, Ticket ticket) {
+        this.name = name;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.serviceType = serviceType;
+        this.ticket = ticket;
+        this.status = "Ongoing";
+    }
 
-    # Example usage
-    queue_system.enqueue("Philip")
-    queue_system.enqueue(123)  # Invalid input, should raise TypeError
-    queue_system.dequeue()
-    queue_system.dequeue()  # Attempt to dequeue from an empty queue, should raise IndexError
+    public String getName() {
+        return name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public Ticket getTicket() {
+        return ticket;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
+
+public class HospitalQueuingSystem {
+    private static List<Patient> patients = new ArrayList<>();
+    private static List<Patient> transactionHistory = new ArrayList<>();
+    private static Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        while (true) {
+            System.out.println("--- Hospital Queuing System ---");
+            System.out.println("1. Start Transaction");
+            System.out.println("2. Generate Ticket");
+            System.out.println("3. Display Transaction Summary");
+            System.out.println("4. Finish Transaction");
+            System.out.println("5. Admin Function: Transaction History");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+
+            try {
+                int choice = sc.nextInt();
+                sc.nextLine(); // Consume newline
+
+                switch (choice) {
+                    case 1:
+                        startTransaction();
+                        break;
+                    case 2:
+                        generateTicket();
+                        break;
+                    case 3:
+                        displayTransactionSummary();
+                        break;
+                    case 4:
+                        finishTransaction();
+                        break;
+                    case 5:
+                        adminFunction();
+                        break;
+                    case 6:
+                        exitProgram();
+                        return; // Ensure the loop exits
+                    default:
+                        System.out.println("Invalid choice. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                sc.nextLine(); // Consume the invalid input
+            }
+        }
+    }
+
+    private static void startTransaction() {
+        try {
+            System.out.print("Enter your name: ");
+            String name = sc.nextLine();
+            if (name.isEmpty()) throw new IllegalArgumentException("Name cannot be empty.");
+
+            System.out.print("Enter your address: ");
+            String address = sc.nextLine();
+            if (address.isEmpty()) throw new IllegalArgumentException("Address cannot be empty.");
+
+            String phoneNumber = getValidPhoneNumber();
+
+            String serviceType = "";
+            while (true) {
+                System.out.println("Choose service:");
+                System.out.println("1. Doctor");
+                System.out.println("2. Cashier");
+                System.out.println("3. Laboratory");
+                System.out.print("Enter your choice: ");
+
+                try {
+                    int serviceChoice = sc.nextInt();
+                    sc.nextLine(); // Consume newline
+
+                    switch (serviceChoice) {
+                        case 1:
+                            serviceType = "Doctor";
+                            break;
+                        case 2:
+                            serviceType = "Cashier";
+                            break;
+                        case 3:
+                            serviceType = "Laboratory";
+                            break;
+                        default:
+                            System.out.println("Invalid choice. Please select between 1 and 3.");
+                            continue;
+                    }
+                    break;
+                } catch (InputMismatchException e) {
+                    System.out.println("Invalid input. Please enter a number.");
+                    sc.nextLine(); // Consume the invalid input
+                }
+            }
+
+            Ticket ticket = new Ticket();
+            Patient patient = new Patient(name, address, phoneNumber, serviceType, ticket);
+            patients.add(patient);
+            transactionHistory.add(patient);
+            System.out.println("Transaction started.");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static String getValidPhoneNumber() {
+        while (true) {
+            System.out.print("Enter your phone number (Philippine format, e.g., 09123456789): ");
+            String phoneNumber = sc.nextLine();
+            if (phoneNumber.matches("^09\\d{9}$")) {
+                return phoneNumber;
+            } else {
+                System.out.println("Invalid phone number format. Please try again.");
+            }
+        }
+    }
+
+    private static void generateTicket() {
+        try {
+            if (!patients.isEmpty()) {
+                Patient lastPatient = patients.get(patients.size() - 1);
+                System.out.println("Ticket Generated. Your ticket number is: " + lastPatient.getTicket().getTicketNumber());
+            } else {
+                System.out.println("No transaction found. Please start a transaction first.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error generating ticket: " + e.getMessage());
+        }
+    }
+
+    private static void displayTransactionSummary() {
+        try {
+            if (patients.isEmpty()) {
+                System.out.println("No active transactions.");
+            } else {
+                System.out.println("Active transactions.");
+                for (Patient patient : patients) {
+                    System.out.println("Ticket Number: " + patient.getTicket().getTicketNumber());
+                    System.out.println("Name: " + patient.getName());
+                    System.out.println("Address: " + patient.getAddress());
+                    System.out.println("Phone Number: " + patient.getPhoneNumber());
+                    System.out.println("Service: " + patient.getServiceType());
+                    System.out.println("Status: " + patient.getStatus());
+                    System.out.println();
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error displaying transaction summary: " + e.getMessage());
+        }
+    }
+
+    private static void finishTransaction() {
+        try {
+            if (patients.isEmpty()) {
+                System.out.println("No patients in queue.");
+            } else {
+                Patient finishedPatient = patients.remove(0);
+                finishedPatient.setStatus("Finished");
+                System.out.println("Finished processing ticket number: " + finishedPatient.getTicket().getTicketNumber());
+            }
+        } catch (Exception e) {
+            System.out.println("Error finishing transaction: " + e.getMessage());
+        }
+    }
+
+    private static void adminFunction() {
+        try {
+            System.out.print("Enter admin username: ");
+            String username = sc.nextLine();
+            System.out.print("Enter admin password: ");
+            String password = sc.nextLine();
+
+            if ("adminadmin".equals(username) && "adminpassword".equals(password)) {
+                if (transactionHistory.isEmpty()) {
+                    System.out.println("No transaction history.");
+                } else {
+                    System.out.println("Transaction history:");
+                    for (Patient patient : transactionHistory) {
+                        System.out.println("Ticket Number: " + patient.getTicket().getTicketNumber());
+                        System.out.println("Name: " + patient.getName());
+                        System.out.println("Address: " + patient.getAddress());
+                        System.out.println("Phone Number: " + patient.getPhoneNumber());
+                        System.out.println("Service: " + patient.getServiceType());
+                        System.out.println("Status: " + patient.getStatus());
+                        System.out.println();
+                    }
+                }
+            } else {
+                System.out.println("Invalid admin credentials.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error accessing admin functions: " + e.getMessage());
+        }
+    }
+
+    private static void exitProgram() {
+        System.out.println("Exiting...");
+        sc.close();
+    }
+}
