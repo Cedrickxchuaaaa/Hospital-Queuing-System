@@ -1,23 +1,39 @@
-Improving error handling in a hospital queuing system is crucial for ensuring smooth operations and patient satisfaction. Here's a general approach you could take:
+import logging
+import sys
 
-1. **Identify Potential Errors**: Start by identifying potential errors that could occur in the queuing system. This could include system failures, network issues, invalid user inputs, database errors, etc.
+class QueueSystem:
+    def __init__(self):
+        self.queue = []
 
-2. **Error Logging**: Implement a robust error logging mechanism that records all errors encountered by the system. Include relevant details such as the timestamp, the user involved (if applicable), the nature of the error, and any relevant contextual information.
+    def enqueue(self, patient):
+        try:
+            if not isinstance(patient, str):
+                raise TypeError("Patient name must be a string")
+            self.queue.append(patient)
+            print(f"{patient} has been added to the queue.")
+        except TypeError as e:
+            self.log_error(e)
 
-3. **User Feedback**: Provide clear and informative error messages to users when something goes wrong. These messages should explain what went wrong in a user-friendly language and suggest possible actions to resolve the issue.
+    def dequeue(self):
+        try:
+            if len(self.queue) == 0:
+                raise IndexError("Queue is empty")
+            patient = self.queue.pop(0)
+            print(f"{patient} has been dequeued.")
+            return patient
+        except IndexError as e:
+            self.log_error(e)
 
-4. **Graceful Degradation**: Implement strategies for graceful degradation in case of errors. This means that even if a part of the system fails, other parts should continue to function as expected to minimize disruption.
+    def log_error(self, error):
+        logging.basicConfig(filename='error.log', level=logging.ERROR)
+        logging.error(error)
+        print("An error occurred. Please contact support for assistance.")
 
-5. **Automated Alerts**: Set up automated alerts to notify system administrators or technical support staff whenever critical errors occur. This allows for prompt investigation and resolution of issues.
+if __name__ == "__main__":
+    queue_system = QueueSystem()
 
-6. **Retry Mechanism**: Implement retry mechanisms for transient errors, such as network timeouts or database connection issues. This can help improve the system's resilience against temporary disruptions.
-
-7. **Fallback Options**: Provide fallback options or alternative workflows for users in case the primary functionality is unavailable due to an error. For example, if online queuing is down, provide information on how patients can queue manually.
-
-8. **Regular Testing and Monitoring**: Regularly test the system for potential errors and vulnerabilities. Implement monitoring tools to continuously monitor system health and performance, allowing for proactive identification and resolution of issues.
-
-9. **User Training**: Educate users on common errors and troubleshooting steps they can take on their own. This can help reduce the frequency of errors and improve user satisfaction.
-
-10. **Documentation**: Maintain comprehensive documentation for the queuing system, including troubleshooting guides and FAQs. This empowers both users and support staff to resolve issues effectively.
-
-By implementing these strategies, you can enhance the robustness and reliability of the hospital queuing system, ensuring a smoother experience for both patients and staff.
+    # Example usage
+    queue_system.enqueue("Philip")
+    queue_system.enqueue(123)  # Invalid input, should raise TypeError
+    queue_system.dequeue()
+    queue_system.dequeue()  # Attempt to dequeue from an empty queue, should raise IndexError
